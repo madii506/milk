@@ -7,14 +7,19 @@
 <meta name="description" content="Every pool is a cow. Milk it. Add liquidity to any pump.fun PumpSwap pool in one click from SOL and earn a cut of every trade.">
 <meta property="og:title" content="MILK">
 <meta property="og:description" content="Every pool is a cow. Milk it. One-click liquidity for pump.fun PumpSwap pools.">
-<meta property="og:image" content="/img/og.png">
+<meta property="og:image" content="https://milk-five-alpha.vercel.app/img/og.png">
+<meta property="og:url" content="https://milk-five-alpha.vercel.app/">
+<meta name="twitter:image" content="https://milk-five-alpha.vercel.app/img/og.png">
+<meta name="twitter:title" content="MILK">
+<meta name="twitter:description" content="Every pool is a cow. Milk it. One-click liquidity for pump.fun PumpSwap pools.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2354F0">
 <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/favicon-64.png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/pixelify.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/milk.css?v=3">
+<link rel="stylesheet" href="/css/milk.css?v=4">
 </head>
 <body>
 <header class="nav top" id="nav">
@@ -39,6 +44,7 @@
         <input id="findIn" type="text" spellcheck="false" placeholder="Paste a coin address or search a name" aria-label="Coin address or name">
         <button class="btn px" type="submit">Find the cow</button>
       </form>
+      <div class="ca-pill" id="caPill" hidden></div>
       <ul class="trust">
         <li>Your wallet signs everything</li>
         <li>Official PumpSwap pools only</li>
@@ -184,6 +190,6 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="/js/milk.js?v=3" defer></script>
+<script src="/js/milk.js?v=4" defer></script>
 </body>
 </html>

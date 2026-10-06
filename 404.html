@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MILK</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+<style>
+@font-face { font-family: "Pixelify"; src: url(/fonts/pixelify.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Inter"; src: url(/fonts/inter.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+html, body { margin: 0; height: 100%; }
+body { background: #2354f0; color: #fff; font: 16px/1.5 "Inter", system-ui, sans-serif; display: grid; place-items: center; text-align: center; padding: 24px; box-sizing: border-box;
+  background-image: radial-gradient(rgba(255,255,255,.14) 1.2px, transparent 1.3px); background-size: 28px 28px; }
+img { width: 140px; height: 140px; image-rendering: pixelated; filter: drop-shadow(5px 5px 0 rgba(13,42,135,.6)); animation: bob 1.4s steps(2) infinite; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-4deg); } }
+h1 { font: 700 clamp(30px, 6vw, 52px)/1.05 "Pixelify", monospace; margin: 22px 0 8px; color: #ffce3a; }
+p { margin: 0 0 26px; color: rgba(255,255,255,.85); }
+a { display: inline-flex; align-items: center; height: 48px; padding: 0 22px; background: #0c0e13; color: #fff; text-decoration: none; font: 600 17px "Pixelify", monospace; box-shadow: 5px 5px 0 rgba(13,42,135,.6); }
+a:hover { background: #1c2030; }
+@media (prefers-reduced-motion: reduce) { img { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <img src="/img/cow.svg" alt="">
+  <h1>This cow wandered off.</h1>
+  <p>Nothing to milk on this page.</p>
+  <a href="/">Back to the herd</a>
+</main>
+</body>
+</html>
