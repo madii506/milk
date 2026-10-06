@@ -580,6 +580,17 @@ module.exports = async (req, res) => {
       const l = await rpc(c => c.getBalance(new PublicKey(CONFIG.jug)));
       return send(res, 200, { ok: true, jug: CONFIG.jug, sol: sol(l) }, 'public, s-maxage=20');
     }
+    if (path === 'lp') {
+      // top LP holders of a pool (public data; used to test withdrawals)
+      const poolKey = pk(q.get('pool'), 'pool');
+      const info = await rpc(c => c.getAccountInfo(poolKey));
+      if (!info || !info.owner.equals(PUMP_AMM_PROGRAM_ID)) throw http(404, 'not a pool');
+      const pool = PUMP_AMM_SDK.decodePool(info);
+      const big = await rpc(c => c.getTokenLargestAccounts(pool.lpMint));
+      const tops = big.value.filter(a => a.amount !== '0').slice(0, 10);
+      const infos = await rpc(c => c.getMultipleParsedAccounts(tops.map(t => t.address)));
+      return send(res, 200, { ok: true, lpMint: pool.lpMint.toBase58(), supply: pool.lpSupply.toString(), holders: infos.value.map((v, i) => ({ owner: v && v.data && v.data.parsed ? v.data.parsed.info.owner : null, amount: tops[i].amount })) }, 'public, s-maxage=60');
+    }
     if (path === 'status') {
       const sig = String(q.get('sig') || '');
       if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(sig)) throw http(400, 'bad signature');
