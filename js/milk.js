@@ -455,6 +455,10 @@
     try {
       S.cfg = await api('config');
       if (S.cfg.ca) {
+        const ca = esc(S.cfg.ca), xh = S.cfg.x ? (String(S.cfg.x).startsWith('http') ? S.cfg.x : 'https://x.com/' + String(S.cfg.x).replace(/^@/, '')) : '';
+        $('#caPill').innerHTML = `<span class="ca-l">$MILK</span><code>${short(S.cfg.ca)}</code><button type="button" id="caCopy">Copy</button><a href="https://pump.fun/coin/${ca}" target="_blank" rel="noopener">Buy</a><a href="https://dexscreener.com/solana/${ca}" target="_blank" rel="noopener">Chart</a>${xh ? `<a href="${esc(xh)}" target="_blank" rel="noopener">X</a>` : ''}`;
+        $('#caPill').hidden = false;
+        $('#caCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(S.cfg.ca).then(() => toast('Address copied')); };
         $('#caFaq').innerHTML = `Yes. The only official $MILK address is <code>${esc(S.cfg.ca)}</code><button class="copy" type="button" id="cpy">Copy</button>. Anything else is not ours.`;
         $('#cpy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(S.cfg.ca).then(() => toast('Address copied')); };
       }
