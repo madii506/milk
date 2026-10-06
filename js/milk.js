@@ -211,7 +211,7 @@
     try {
       const j = await api('pools');
       S.pools = j.pools || []; S.updated = j.updated || Date.now();
-      renderPools(); renderStats(); renderTopCow(); tickUpdated();
+      renderPools(); renderStats(); renderTopCow(); renderTicker(); calcPools(); tickUpdated();
     } catch (e) {
       if (quiet) return;
       $('#rows').innerHTML = `<div class="empty">${COW}<b>Could not reach the market.</b><button class="btn sm" id="retry" type="button" style="margin-top:10px">Retry</button></div>`;
@@ -237,8 +237,8 @@
   $('#dClose').addEventListener('click', closeDrawer); $('#veil').addEventListener('click', closeDrawer);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#wModal').hidden) $('#wModal').hidden = true; else if (S.pool) closeDrawer(); } });
 
-  async function openPool(id, quiet, tab) {
-    if (!quiet) { S.pool = { pool: id, loading: true }; S.tab = tab || 'add'; S.amt = ''; renderDrawer(); openDrawer(); }
+  async function openPool(id, quiet, tab, amt) {
+    if (!quiet) { S.pool = { pool: id, loading: true }; S.tab = tab || 'add'; S.amt = amt || ''; renderDrawer(); openDrawer(); }
     try {
       const j = await api('pool?id=' + encodeURIComponent(id) + (W.acct ? '&user=' + W.acct.address : ''));
       if (S.pool && (S.pool.pool === id || S.pool.mint === id || S.pool.pool === j.pool.pool || quiet)) { S.pool = j.pool; renderDrawer(); }
@@ -385,7 +385,7 @@
   /* ---------- positions ---------- */
   function renderPositions() {
     const box = $('#pos'); $('#refreshPos').hidden = !W.w;
-    if (!W.w) { box.innerHTML = `<div class="connect-card">${COW}<p>Connect a wallet to see every PumpSwap position it holds, including ones added on pump.fun.</p><button class="btn px blue" id="cw2" type="button">Connect wallet</button></div>`; $('#cw2').onclick = connect; return; }
+    if (!W.w) { box.innerHTML = `<div class="connect-card wide"><div class="bottle-ico">${BOTTLE}</div><div><h3>Every position you hold, in one place</h3><p>Connect a wallet to see each PumpSwap pool it is in, what the position is worth, and what it earns a day. Positions added on pump.fun show up too.</p></div><button class="btn px blue" id="cw2" type="button">Connect wallet</button></div>`; $('#cw2').onclick = connect; return; }
     if (S.positions == null) { box.innerHTML = '<div class="skel" style="border-radius:16px;border:0"></div>'; return; }
     if (S.positions.error) { box.innerHTML = `<div class="connect-card"><p>${esc(S.positions.error)}</p><button class="btn sm" id="rp" type="button">Retry</button></div>`; $('#rp').onclick = loadPositions; return; }
     if (!S.positions.length) { box.innerHTML = `<div class="connect-card">${COW}<p>No cows yet. Pick one from the herd and add from SOL.</p><a class="btn px blue" href="#pools">See the pools</a></div>`; return; }
@@ -408,6 +408,47 @@
     catch (e) { S.positions = { error: e.message }; }
     renderPositions();
   }
+
+
+  /* ---------- polish-1: ticker, calculator, machine ---------- */
+  const BOTTLE = `<svg viewBox="0 0 16 22" shape-rendering="crispEdges" aria-hidden="true"><path fill="#241e1b" d="M5 0h6v1H5zM4 1h1v3H4zM11 1h1v3h-1zM5 4h6v1H5zM5 5h1v2H5zM10 5h1v2h-1zM4 7h1v1H4zM11 7h1v1h-1zM3 8h1v13H3zM12 8h1v13h-1zM4 21h8v1H4z"/><path fill="#2354f0" d="M5 1h6v3H5z"/><path fill="#dfe6f7" d="M6 5h4v2H6zM5 7h6v1H5zM4 8h8v13H4z"/><rect class="milkfill" x="4" y="10" width="8" height="11" fill="#fffdf6"/><path fill="#ffffff" d="M5 9h1v5H5z" opacity=".8"/></svg>`;
+  function renderTicker() {
+    const list = S.pools.filter(p => p.tvlSol >= 25).sort((a, b) => b.milkPerSolDay - a.milkPerSolDay).slice(0, 18);
+    if (!list.length) return;
+    const one = list.map(p => `<span class="tk-item" data-pool="${esc(p.pool)}"><i></i><b>${esc(p.symbol ? '$' + p.symbol : short(p.mint))}</b><em>${pctTxt(p.milkPerSolDay, 1)}</em>a day · ${compact(p.tvlSol)} SOL pool</span>`).join('');
+    $('#ticker').innerHTML = one + one; $('#tickerBox').hidden = false;
+  }
+  $('#ticker').addEventListener('click', e => { const t = e.target.closest('[data-pool]'); if (t) openPool(t.dataset.pool); });
+
+  const C = { list: [], p: null, amt: 1 };
+  function calcPools() {
+    C.list = S.pools.filter(p => p.tvlSol >= 25).sort((a, b) => b.milkPerSolDay - a.milkPerSolDay).slice(0, 30);
+    if (!C.list.length) C.list = S.pools.slice(0, 30);
+    if (!C.p || !C.list.some(p => p.pool === C.p.pool)) C.p = C.list[0] || null;
+    else C.p = C.list.find(p => p.pool === C.p.pool);
+    $('#cList').innerHTML = C.list.map(p => `<button type="button" role="option" data-pool="${esc(p.pool)}" class="${C.p && p.pool === C.p.pool ? 'on' : ''}">${tokImg(p)}<b>${esc(p.name || short(p.mint))}</b><em>${pctTxt(p.milkPerSolDay, 1)}</em></button>`).join('');
+    calcRender();
+  }
+  function calcRender() {
+    const p = C.p, v = C.amt;
+    $('#cCur').innerHTML = p ? `${tokImg(p)}<span class="t">${esc(p.name || short(p.mint))}<small>${label(p)} · ${compact(p.tvlSol)} SOL pool · ${pctTxt(p.milkPerSolDay, 1)} a day</small></span>` : 'No pools loaded';
+    const set = (id, t) => { $(id).textContent = t; };
+    if (!p || !(v > 0)) { ['#cDay', '#cWeek', '#cMonth', '#cShare'].forEach(id => set(id, '—')); $('#cSim').innerHTML = ''; return; }
+    const dep = v * (1 - (S.cfg.feeBps || 0) / 1e4) * (1 - p.totalBps / 2e4);
+    const share = dep / (p.tvlSol + dep), day = share * p.volSol * p.lpBps / 1e4;
+    set('#cDay', fsol(day)); set('#cWeek', fsol(day * 7) + ' SOL'); set('#cMonth', fsol(day * 30) + ' SOL'); set('#cShare', pctTxt(share, 3));
+    const sym = p.symbol ? '$' + p.symbol : 'the coin';
+    $('#cSim').innerHTML = `<p><b>If the price moves</b>, your ${fsol(v)} SOL position is worth this, before fees earned:</p><table><tr><th>${esc(sym)}</th><th>Position</th><th>Change</th></tr>${[[-75, .25], [-50, .5], [100, 2], [300, 4]].map(([pc, r]) => { const lp = dep * Math.sqrt(r), d = lp / v - 1; return `<tr><td>${pc > 0 ? '+' : ''}${pc}%</td><td>${fsol(lp)} SOL</td><td class="${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '+' : ''}${(d * 100).toFixed(0)}%</td></tr>`; }).join('')}</table>`;
+  }
+  const pickClose = () => { $('#cList').hidden = true; $('#cPick').classList.remove('open'); };
+  $('#cPickBtn').addEventListener('click', e => { e.stopPropagation(); const open = $('#cList').hidden; $('#cList').hidden = !open; $('#cPick').classList.toggle('open', open); });
+  $('#cList').addEventListener('click', e => { const b = e.target.closest('[data-pool]'); if (!b) return; C.p = C.list.find(p => p.pool === b.dataset.pool); $$('#cList button').forEach(x => x.classList.toggle('on', x === b)); pickClose(); calcRender(); });
+  document.addEventListener('click', e => { if (!e.target.closest('#cPick')) pickClose(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') pickClose(); });
+  $('#cAmts').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; C.amt = +b.dataset.v; $('#cAmt').value = ''; $$('#cAmts .chip').forEach(x => x.classList.toggle('on', x === b)); calcRender(); });
+  $('#cAmt').addEventListener('input', e => { const v = parseFloat(e.target.value.replace(',', '.')); if (v > 0) { C.amt = v; $$('#cAmts .chip').forEach(x => x.classList.remove('on')); } calcRender(); });
+  $('#cGo').addEventListener('click', () => { if (C.p) openPool(C.p.pool, false, 'add', String(C.amt)); });
+  $('#mCow').innerHTML = COW; $('#mBottle').innerHTML = BOTTLE; $('#faqCow').innerHTML = COW;
 
   /* ---------- config, nav, icons, wave ---------- */
   async function loadConfig() {
