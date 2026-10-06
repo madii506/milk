@@ -449,3 +449,11 @@ code { font: 12.5px var(--mono); word-break: break-all; background: var(--soft);
   .connect-card.wide { grid-template-columns: 1fr; text-align: center; justify-items: center; padding: 26px 18px; }
   .connect-card.wide .btn { justify-self: center; }
 }
+
+/* ---- launch: CA pill ---- */
+.ca-pill { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 18px 0 0; padding: 6px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); }
+.ca-pill .ca-l { font-family: var(--px); font-weight: 700; color: var(--yellow); padding: 0 6px; }
+.ca-pill code { background: rgba(0,0,0,.18); color: #fff; padding: 6px 8px; border-radius: 0; font-size: 13px; }
+.ca-pill button, .ca-pill a { height: 32px; display: inline-flex; align-items: center; padding: 0 12px; background: #fff; color: var(--ink); border: 0; font-weight: 650; font-size: 13px; text-decoration: none; }
+.ca-pill button:hover, .ca-pill a:hover { background: var(--yellow); }
+@media (max-width: 720px) { .ca-pill button, .ca-pill a { height: 40px; } }
